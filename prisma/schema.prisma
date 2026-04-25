@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Deal {
+  id             String           @id
+  name           String
+  industry       String
+  location       String
+  status         String
+  fitScore       Int
+  recommendation String
+  createdAt      DateTime
+  updatedAt      DateTime
+  documents      Document[]
+  chunks         DocumentChunk[]
+  metrics        ExtractedMetric[]
+  risks          RiskFlag[]
+  memos          InvestmentMemo[]
+}
+
+model Document {
+  id          String          @id
+  dealId      String
+  fileName    String
+  fileType    String
+  storagePath String
+  status      String
+  uploadedAt  DateTime
+  error       String?
+  deal        Deal            @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  chunks      DocumentChunk[]
+}
+
+model DocumentChunk {
+  id           String @id
+  dealId       String
+  documentId   String
+  documentName String
+  locator      String
+  chunkType    String
+  text         String
+  deal         Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model ExtractedMetric {
+  id         String @id
+  dealId     String
+  name       String
+  value      String
+  period     String?
+  confidence Float
+  citations  Json
+  deal       Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+}
+
+model RiskFlag {
+  id                String @id
+  dealId            String
+  category          String
+  severity          String
+  title             String
+  explanation       String
+  diligenceQuestion String
+  citations         Json
+  deal              Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+}
+
+model InvestmentMemo {
+  id          String   @id
+  dealId      String
+  sections    Json
+  markdown    String
+  generatedAt DateTime
+  deal        Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+}
