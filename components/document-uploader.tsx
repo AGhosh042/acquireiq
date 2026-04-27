@@ -7,16 +7,14 @@ import { documentCategories, inferDocumentCategory } from "@/lib/documents/categ
 import { DealDocument, DocumentCategory } from "@/lib/types";
 
 export function DocumentUploader({ dealId, documents }: { dealId: string; documents: DealDocument[] }) {
-  const [filesByCategory, setFilesByCategory] = useState<Partial<Record<DocumentCategory, FileList | null>>>({});
+  const [category, setCategory] = useState<DocumentCategory>("financials");
+  const [files, setFiles] = useState<FileList | null>(null);
   const [status, setStatus] = useState<string>("");
-  const [activeCategory, setActiveCategory] = useState<DocumentCategory | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function upload(category: DocumentCategory) {
-    const files = filesByCategory[category];
+  async function upload() {
     if (!files?.length) return;
     setBusy(true);
-    setActiveCategory(category);
     setStatus("Processing documents...");
     const form = new FormData();
     form.append("dealId", dealId);
@@ -27,7 +25,6 @@ export function DocumentUploader({ dealId, documents }: { dealId: string; docume
     if (!response.ok) {
       setStatus(body.error || "Upload failed.");
       setBusy(false);
-      setActiveCategory(null);
       return;
     }
     setStatus("Analysis complete. Refreshing...");
@@ -44,44 +41,60 @@ export function DocumentUploader({ dealId, documents }: { dealId: string; docume
         <Badge>{documents.length} files</Badge>
       </div>
 
-      <div className="mt-4 grid gap-3">
-        {documentCategories.map((category) => {
-          const uploadedCount = documents.filter((document) => (document.category ?? inferDocumentCategory(document.fileName)) === category.id).length;
-          const inputId = `documents-${category.id}`;
-          const selectedCount = filesByCategory[category.id]?.length ?? 0;
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        {documentCategories.map((item) => {
+          const uploadedCount = documents.filter((document) => (document.category ?? inferDocumentCategory(document.fileName)) === item.id).length;
 
           return (
-            <section key={category.id} className="rounded-md border border-ink/10 bg-paper/60 p-3">
-              <div className="flex items-start gap-3">
-                {uploadedCount ? <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-700" size={18} /> : <Circle className="mt-0.5 shrink-0 text-moss" size={18} />}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="font-semibold text-ink" htmlFor={inputId}>{category.label}</label>
-                    {category.required && <Badge tone="warn">important</Badge>}
-                    {!!uploadedCount && <Badge tone="good">{uploadedCount} uploaded</Badge>}
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed text-moss">{category.description}</p>
-                  <p className="mt-1 text-xs text-moss">Examples: {category.examples}</p>
-                  <input
-                    id={inputId}
-                    type="file"
-                    multiple
-                    accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"
-                    className="mt-3 block w-full rounded-md border border-ink/15 bg-white p-2 text-xs"
-                    onChange={(event) => setFilesByCategory((current) => ({ ...current, [category.id]: event.target.files }))}
-                  />
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Button className="px-3 py-1.5 text-xs" onClick={() => upload(category.id)} disabled={busy || !selectedCount}>
-                      {busy && activeCategory === category.id ? <Upload size={14} /> : <FilePlus2 size={14} />}
-                      {busy && activeCategory === category.id ? "Analyzing..." : `Add ${category.label}`}
-                    </Button>
-                    <span className="text-xs text-moss">{selectedCount ? `${selectedCount} selected` : "PDF, Excel, Word, CSV, TXT"}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <button
+              key={item.id}
+              className={`focus-ring rounded-md border p-2 text-left transition ${
+                item.id === category
+                  ? "border-emerald-200 bg-emerald-50/70"
+                  : "border-ink/10 bg-paper/60 hover:bg-mist/60"
+              }`}
+              onClick={() => setCategory(item.id)}
+              type="button"
+            >
+              <span className="flex items-center gap-2">
+                {uploadedCount ? <CheckCircle2 className="shrink-0 text-emerald-700" size={15} /> : <Circle className="shrink-0 text-moss" size={15} />}
+                <span className="truncate text-xs font-bold text-ink">{item.label}</span>
+              </span>
+              <span className="mt-1 block text-xs text-moss">{uploadedCount ? `${uploadedCount} uploaded` : item.required ? "Important" : "Optional"}</span>
+            </button>
           );
         })}
+      </div>
+
+      <div className="mt-4 rounded-md border border-ink/10 bg-paper/60 p-3">
+        <label className="text-xs font-bold text-ink" htmlFor="document-category">Document section</label>
+        <select
+          id="document-category"
+          className="focus-ring mt-2 w-full rounded-md border border-ink/15 bg-white p-2 text-sm"
+          value={category}
+          onChange={(event) => setCategory(event.target.value as DocumentCategory)}
+        >
+          {documentCategories.map((item) => (
+            <option key={item.id} value={item.id}>{item.label}</option>
+          ))}
+        </select>
+        <p className="mt-2 text-xs leading-relaxed text-moss">
+          {documentCategories.find((item) => item.id === category)?.description}
+        </p>
+        <input
+          type="file"
+          multiple
+          accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt"
+          className="mt-3 block w-full rounded-md border border-ink/15 bg-white p-2 text-xs"
+          onChange={(event) => setFiles(event.target.files)}
+        />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Button className="px-3 py-1.5 text-xs" onClick={upload} disabled={busy || !files?.length}>
+            {busy ? <Upload size={14} /> : <FilePlus2 size={14} />}
+            {busy ? "Analyzing..." : "Upload & Analyze"}
+          </Button>
+          <span className="text-xs text-moss">{files?.length ? `${files.length} selected` : "PDF, Excel, Word, CSV, TXT"}</span>
+        </div>
       </div>
       <p className="mt-3 text-sm text-moss">{status}</p>
     </div>
