@@ -12,7 +12,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <div className="app-watermark" aria-hidden="true">
+          Created by Ayush Ghosh
+        </div>
+      </body>
     </html>
   );
 }
