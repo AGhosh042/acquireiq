@@ -14,6 +14,32 @@ AcquireIQ is a portfolio-ready SMB acquisition screening app for M&A workflows. 
 - Synthetic demo deals for safe portfolio demos
 - Prisma schema for a future PostgreSQL production backend
 
+## Screenshots
+
+### Deal Pipeline
+
+View acquisition targets, fit scores, recommendations, and quick actions from the main pipeline.
+
+![AcquireIQ deal pipeline](public/screenshots/deal-pipeline.png)
+
+### Deal Dashboard
+
+Review extracted metrics, source documents, diligence upload sections, and acquisition risk flags.
+
+![AcquireIQ deal dashboard](public/screenshots/deal-dashboard.png)
+
+### Document Preview
+
+Click any uploaded document to preview parsed source chunks and search within the file.
+
+![AcquireIQ document preview](public/screenshots/document-preview.png)
+
+### Investment Memo
+
+Generate a first-pass investment memo with cited deal evidence and diligence questions.
+
+![AcquireIQ investment memo](public/screenshots/investment-memo.png)
+
 ## Tech Stack
 
 - Next.js
